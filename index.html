@@ -8,9 +8,13 @@
 <meta property="og:title" content="FORK · Fork any runner.">
 <meta property="og:description" content="Paste a runner. Keep the engine. Get a new name, logo, palette and site in minutes.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="/og.jpg">
+<meta property="og:image" content="https://www.forkanyrunner.fun/og.jpg">
+<meta property="og:url" content="https://www.forkanyrunner.fun/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="/og.jpg">
+<meta name="twitter:image" content="https://www.forkanyrunner.fun/og.jpg">
+<meta name="twitter:title" content="FORK · Fork any runner.">
+<meta name="twitter:description" content="Paste a runner. Keep the engine. Get a new name, logo, palette and site in minutes.">
+<meta name="twitter:site" content="@ForkAnyRunner">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23f1f0ea'/%3E%3Cpath d='M12.2 19.6 L21.8 10.4' stroke='%230e0f0c' stroke-width='1.7' stroke-linecap='round'/%3E%3Ccircle cx='10.6' cy='21.2' r='7.2' fill='%232b2c29'/%3E%3Ccircle cx='23' cy='9.4' r='5.4' fill='%2312a15f'/%3E%3C/svg%3E">
 <title>FORK</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -479,6 +483,8 @@ footer{padding-block:clamp(110px,14vw,200px) 40px;scroll-margin-top:68px}
   .storyline p,.tagc,.gens li,.diff div,.chip.sk,.pulse{transition:none;animation:none}
 }
 .btn.disabled{opacity:.45;pointer-events:none}
+.ph{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.02em}
+.pc .ph.pic{font-size:15px}
 </style>
 
 </head>
@@ -1263,9 +1269,9 @@ ${moduleJS(id)}
 /* ===== Edit these at launch ===== */
 const CONFIG = {
   ca: "Hfh7ybrbejvgACJL2ZYG7VzFRVeoYPF2BBuAk8z1pump", // $FORK mint address
-  x: "",             // e.g. "https://x.com/yourhandle"
+  x: "https://x.com/ForkAnyRunner",
   dexscreener: "",   // optional
-  site: "",          // e.g. "fork.fun" — printed on Fork Cards and in every fork's footer
+  site: "forkanyrunner.fun", // printed on Fork Cards and in every fork's footer
   fees: [
     { label: "AI rebuilds", note: "Reads a runner’s whole site and rewrites it as yours", cents: 50 },
     { label: "Hosting forks", note: "One-click live links for forks made here", cents: 30 },
@@ -1348,6 +1354,12 @@ async function resolveRunner(input){
   return toParent(pool[0]);
 }
 
+
+/* token avatars: the image when it loads, a colored monogram when it doesn't */
+const phColor = s => { let h = 0; for (const c of String(s || "?")) h = (h * 31 + c.charCodeAt(0)) % 360; return `hsl(${h} 55% 46%)`; };
+const phHTML = (sym, cls) => `<span class="ph ${cls}" style="background:${phColor(sym)}">${esc(String(sym || "?").replace(/^\$/, "").slice(0, 2).toUpperCase())}</span>`;
+function avatar(img, sym, cls){ return img ? `<img class="${cls}" src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-s="${esc(sym || "")}" onerror="phSwap(this)">` : phHTML(sym, cls); }
+window.phSwap = el => { const t = document.createElement("template"); t.innerHTML = phHTML(el.dataset.s, el.className); el.replaceWith(t.content.firstChild); };
 /* ===== Studio state ===== */
 const EXAMPLE = { name: "Ghost", symbol: "GHOST", ca: "", mcap: 4.1e6, ch: 38.2, vol: 2.2e6, liq: 310000, buys: 18210, sells: 15032, created: Date.now() - 3 * 864e5, img: "", links: [], desc: "An AI agent that never sleeps.", live: false };
 let RUNNERS = [];
@@ -1361,7 +1373,7 @@ function elapsed(){ if (!ST.started) return ""; const s = Math.max(1, Math.round
 function renderRunners(){
   const ul = $("runners");
   if (!RUNNERS.length){ ul.innerHTML = `<li class="note">${LIVE_FAILED ? "The live list is offline right now. Paste a CA above instead." : "Loading what’s running…"}</li>`; return; }
-  ul.innerHTML = RUNNERS.map((r, i) => `<li data-i="${i}" class="${ST.parent && ST.parent.ca === r.ca ? "sel" : ""}" tabindex="0" role="button" aria-label="Fork ${esc(r.name)}">${r.img ? `<img src="${esc(r.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="ph"></span>`}<span><b>${esc(r.name)}</b><small>$${esc(r.symbol)} · ${short(r.ca)}</small></span><span class="mc">${money(r.mcap)}</span><span class="ch ${r.ch >= 0 ? "up" : "dn"}">${pct(r.ch)}</span></li>`).join("");
+  ul.innerHTML = RUNNERS.map((r, i) => `<li data-i="${i}" class="${ST.parent && ST.parent.ca === r.ca ? "sel" : ""}" tabindex="0" role="button" aria-label="Fork ${esc(r.name)}">${avatar(r.img, r.symbol, "")}<span><b>${esc(r.name)}</b><small>$${esc(r.symbol)} · ${short(r.ca)}</small></span><span class="mc">${money(r.mcap)}</span><span class="ch ${r.ch >= 0 ? "up" : "dn"}">${pct(r.ch)}</span></li>`).join("");
   ul.querySelectorAll("li[data-i]").forEach(li => {
     const go = () => { touch(); setParent(RUNNERS[+li.dataset.i]); };
     li.addEventListener("click", go); li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); go(); } });
@@ -1371,14 +1383,14 @@ let LIVE_FAILED = false;
 function renderChips(){
   const box = $("hero-chips");
   if (!RUNNERS.length){ box.innerHTML = LIVE_FAILED ? `<span class="label" style="text-transform:none;letter-spacing:.02em">Live list offline. Paste a CA instead.</span>` : box.innerHTML; return; }
-  box.innerHTML = RUNNERS.slice(0, 5).map((r, i) => `<button type="button" class="chip" data-i="${i}">${r.img ? `<img src="${esc(r.img)}" alt="" referrerpolicy="no-referrer">` : `<span class="ph"></span>`}$${esc(r.symbol.slice(0, 10))} <span class="${r.ch >= 0 ? "up" : "dn"}">${pct(r.ch)}</span></button>`).join("");
+  box.innerHTML = RUNNERS.slice(0, 5).map((r, i) => `<button type="button" class="chip" data-i="${i}">${avatar(r.img, r.symbol, "")}$${esc(r.symbol.slice(0, 10))} <span class="${r.ch >= 0 ? "up" : "dn"}">${pct(r.ch)}</span></button>`).join("");
   box.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { touch(); setParent(RUNNERS[+c.dataset.i]); goStudio(); }));
 }
 function goStudio(){ const el = $("studio"); window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 40, behavior: reduce ? "auto" : "smooth" }); }
 
 function renderParent(){
   const p = ST.parent;
-  $("pcard").innerHTML = `${p.img ? `<img class="pic" src="${esc(p.img)}" alt="" referrerpolicy="no-referrer">` : `<span class="pic"></span>`}<b>${esc(p.name)} <span class="mono" style="font-size:13px;color:var(--ink-3);font-weight:400">$${esc(p.symbol)}</span></b><span class="addr">${p.live ? esc(p.ca) : "Example runner. Pick a live one above."}</span>`;
+  $("pcard").innerHTML = `${avatar(p.img, p.symbol, "pic")}<b>${esc(p.name)} <span class="mono" style="font-size:13px;color:var(--ink-3);font-weight:400">$${esc(p.symbol)}</span></b><span class="addr">${p.live ? esc(p.ca) : "Example runner. Pick a live one above."}</span>`;
   $("pstats").innerHTML = `<div><dt>Mcap</dt><dd>${money(p.mcap)}</dd></div><div><dt>24h</dt><dd class="${p.ch >= 0 ? "up" : "dn"}">${pct(p.ch)}</dd></div><div><dt>Vol 24h</dt><dd>${money(p.vol)}</dd></div><div><dt>Age</dt><dd>${ageOf(p.created)}</dd></div>`;
   $("st2-s").textContent = p.live ? "live" : "example"; $("st2-s").classList.toggle("ok", !!p.live);
   $("tg-parent").textContent = `$${p.symbol} · ${money(p.mcap)}`;
